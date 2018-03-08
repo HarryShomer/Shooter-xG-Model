@@ -105,7 +105,7 @@ def predict_team(df, col_dict, cols, k):
 
 def make_graph(samples, cors, legends, predict):
     fig = plt.figure()
-    plt.title("Predicting Future {} for Teams".format(predict))
+    plt.title("Predicting Out Of Sample {} for Teams".format(predict))
     plt.xlabel('Num Predictive Games')
     plt.ylabel('R^2')
 
@@ -115,7 +115,7 @@ def make_graph(samples, cors, legends, predict):
     #plt.xlim([0, 80])
     plt.legend(loc=8)
 
-    fig.savefig("Team_{}_foo_bar.png".format(predict))
+    fig.savefig("Team_{}__foo.png".format(predict))
     plt.close()
 
 

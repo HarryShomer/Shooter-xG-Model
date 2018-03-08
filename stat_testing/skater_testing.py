@@ -15,7 +15,7 @@ def goalie_preprocessing():
 
     :return: DataFrame
     """
-    df = pd.read_csv("/Users/Student/hockey/shooter_xg/stat_testing/data/OffsideReview_goalies.csv")
+    df = pd.read_csv("data/OffsideReview_goalies.csv")
 
     # Group up stats
     df = df[['Player', 'Season', 'GP', 'Team', 'Strength', 'TOI', 'GA', 'SA', 'FA', 'xGA', 'sh_xGA']]
@@ -37,9 +37,9 @@ def skater_preprocessing():
     
     :return: DataFrame
     """
-    df_ind = pd.read_csv("/Users/Student/hockey/shooter_xg/stat_testing/data/OffsideReview_skater_ind.csv")
-    df_ice = pd.read_csv("/Users/Student/hockey/shooter_xg/stat_testing/data/OffsideReview_skater_ice.csv")
-    df_rel = pd.read_csv("/Users/Student/hockey/shooter_xg/stat_testing/data/OffsideReview_skater_rel.csv")
+    df_ind = pd.read_csv("data/OffsideReview_skater_ind.csv")
+    df_ice = pd.read_csv("data/OffsideReview_skater_ice.csv")
+    df_rel = pd.read_csv("data/OffsideReview_skater_rel.csv")
 
     # Transfer over individual
     df_ice['Goals'] = df_ind['Goals']
@@ -220,6 +220,53 @@ def goalie_analysis(df):
     predict_stat(df_merged, cols, "fsv%_n+1")
 
 
+def corsica_skaters():
+    """
+    Do analysis of corsica skater stats
+    """
+    df = pd.read_csv("data/corsica_skater_stats.csv")
+    df = fix_team(df)
+
+    cols = [
+        'Rel CF%', 'Rel GF%', 'Rel xGF%',
+        'RelT CF%', 'RelT GF%', 'RelT xGF%',
+        'Rel CF/60', 'Rel GF/60', 'Rel xGF/60',
+        'RelT CF/60', 'RelT GF/60', 'RelT xGF/60',
+        'Rel CA/60', 'Rel GA/60', 'Rel xGA/60',
+        'RelT CA/60', 'RelT GA/60', 'RelT xGA/60',
+    ]
+
+    # Fix Position
+    df['Position'] = np.where(df['Position'] == "D", "D", "F")
+
+    # Filter -> 400 minutes
+    df = df[df['TOI'] >= 400]
+
+    # Change Season
+    df['Season'] = df.apply(lambda row: int(str(row['Season'])[:4]), axis=1)
+
+    # Only essential columns and merge
+    df = df[["Player", "Season", "Team", 'Position', 'GP'] + cols]
+    df_merged = get_next_yr(df, df)
+
+    for pos in ["F", "D"]:
+        df2 = df_merged[df_merged["Position"] == pos]
+
+        print("\nPosition:", pos, "Num:", df2.shape[0])
+
+        # Total Rel
+        predict_stat(df2, cols[:3], "Rel GF%_n+1")
+        predict_stat(df2, cols[3:6], "RelT GF%_n+1")
+
+        # For Rel
+        predict_stat(df2, cols[6:9], "Rel GF/60_n+1")
+        predict_stat(df2, cols[9:12], "RelT GF/60_n+1")
+
+        # Against Rel
+        predict_stat(df2, cols[12:15], "Rel GA/60_n+1")
+        predict_stat(df2, cols[15:], "RelT GA/60_n+1")
+
+
 def skater_analysis(df):
     """
     Year over Year Correlations for both predictivity (of future goals) and reliability:
@@ -262,7 +309,6 @@ def skater_analysis(df):
         # For Forwards and Defensemen
         for pos in ["F", "D"]:
             df_pos = df_merged[df_merged["Position"] == pos]
-            #repeatability(df_merged, cols)
 
             print("\nPosition: {},".format(pos), "Players: {},".format(df_pos.shape[0]), "Seasons: {}".format(offset+1))
 
@@ -273,7 +319,8 @@ def skater_analysis(df):
 
 
 def main():
-    skater_analysis(skater_preprocessing())
+    #skater_analysis(skater_preprocessing())
+    corsica_skaters()
 
 if __name__ == '__main__':
     main()
